@@ -4,45 +4,59 @@ description: Interview the user relentlessly about a plan or design until reachi
 argument-hint: "Plan, design, or topic to grill"
 ---
 
-Interview me relentlessly about every aspect of this plan until
-we reach a shared understanding. Walk down each branch of the design
-tree, resolving dependencies between decisions in order.
+Interview me relentlessly about this plan until we reach a shared understanding.
+Map it as a **design tree**: every decision branches into the decisions that hang
+off it. Work the tree in **rounds**, and do not enact anything until I confirm.
 
-There are two kinds of information here — never confuse them:
+## Facts vs decisions
 
-- **Facts** are things you find by exploring the codebase: existing patterns,
-  current implementations, real constraints. Never ask me for facts — go look
-  them up, and cite what you found.
-- **Decisions** are things only I can decide: architecture choices, feature
-  scope, trade-offs, priorities. Never settle these yourself — ask me.
-  A grilling session where you explore the code and answer your own questions
-  is not grilling; without my answers there is no shared understanding.
+Two kinds of information. Never confuse them:
 
-Keep a running list of candidate questions — the design tree — and ask it in
-**rounds of one topic at a time**, using the harness's structured question tool:
+- **Facts** are things you find by exploring: existing patterns, current
+  implementations, real constraints. Never ask me for a fact. Go look it up and
+  cite what you found. A grilling session where you answer your own questions is
+  not grilling; without my answers there is no shared understanding.
+- **Decisions** are things only I can decide: architecture, feature scope,
+  trade-offs, priorities. Never settle these yourself. Put each to me and wait.
+
+## The frontier
+
+The **frontier** is every decision whose prerequisites are already settled: the
+questions you can ask now without guessing at answers you have not heard yet. A
+question whose answer depends on another question still open belongs to a later
+round.
+
+Each round you settle answers, the tree reshapes: settled decisions push the
+frontier outward and unblock questions that depended on them. Re-derive the
+frontier after every round. Drop questions the answers just settled. Re-frame the
+ones whose options changed. Never re-ask something already answered, and never ask
+two questions that collect the same decision twice.
+
+## Fact-finding does not block the round
+
+When a frontier question needs a fact from the environment, dispatch a sub-agent
+to find it. Do not block the whole round on it: a running exploration is an
+unsettled prerequisite, so only the questions downstream of it wait for the report.
+Ask the rest of the frontier now.
+
+## Asking a round
+
+Serve the frontier through the harness's structured question tool:
 `AskUserQuestion` in Claude Code, the `question` tool in OpenCode, otherwise a
 short numbered list in a single message.
 
-Each round is a group of **at most 4** questions that pass both tests:
-
-- **One topic.** All questions in a group belong to the same area — security, CI
-  setup, data model, deployment. Mixing topics in one round forces me to
-  context-switch mid-answer.
-- **Mutually unbound.** No answer in the group may change another's framing,
-  options, or relevance. If answering A could moot B or rewrite its options, B is
-  not in this round — it waits for the round after A lands. This is the test that
-  matters: a group whose answers cross-contaminate is worse than asking serially.
-
-Dependent questions therefore stay sequential; only genuinely parallel ones batch.
-A single blocking fork on its own is a perfectly good round.
-
-After every round, re-derive what's left: drop questions the answers just settled,
-and re-frame the ones whose options changed. Never re-ask something already
-answered, and never ask two questions that would collect the same decision twice.
+A round is **at most 4** questions from the frontier that share **one topic**
+(security, CI setup, data model, deployment). Mixing topics forces me to
+context-switch mid-answer. If the frontier holds more than one topic or more than
+4 questions, serve the rest in later rounds. A single blocking fork on its own is
+a fine round.
 
 For each question, give the options as real alternatives with their consequences,
-and mark your recommended answer.
+and mark your Recommended answer.
 
-When you believe we are aligned, summarize the locked decisions and ask me to
-confirm. **Do not enact the plan — no code, no files, no commands that change
-state — until I explicitly confirm we've reached a shared understanding.**
+## Done
+
+The session is done when the frontier is empty: every branch of the design tree
+visited, nothing left silently assumed. Then summarize the locked decisions and
+ask me to confirm. **Do not enact the plan (no code, no files, no state-changing
+commands) until I explicitly confirm we have reached a shared understanding.**
