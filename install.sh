@@ -67,10 +67,11 @@ done
 # --- 2. global rules ----------------------------------------------------------
 
 echo "global rules"
-mkdir -p "$HOME/.claude" "$HOME/.codex" "$HOME/.config/opencode"
+mkdir -p "$HOME/.claude" "$HOME/.codex" "$HOME/.config/opencode" "$HOME/.pi/agent"
 link "$REPO/GLOBAL-AGENTS.md" "$HOME/.claude/CLAUDE.md"
 link "$REPO/GLOBAL-AGENTS.md" "$HOME/.codex/AGENTS.md"
 link "$REPO/GLOBAL-AGENTS.md" "$HOME/.config/opencode/AGENTS.md"
+link "$REPO/GLOBAL-AGENTS.md" "$HOME/.pi/agent/AGENTS.md"
 
 # --- 3. Claude Code marketplaces + plugins (via claude CLI, never hand-edits) -
 
@@ -259,6 +260,55 @@ if command -v codex >/dev/null 2>&1; then
   else
     echo "  codex: approvals ok"
   fi
+fi
+
+# --- pi ----------------------------------------------------------------------
+
+if command -v pi >/dev/null 2>&1; then
+  echo "pi packages"
+  installed="$(pi list 2>/dev/null || true)"
+  for pkg in \
+    "npm:pi-web-access" \
+    "npm:pi-mcp-adapter" \
+    "npm:pi-subagents"; do
+    if grep -qF "$pkg" <<<"$installed"; then
+      echo "  $pkg ok"
+    else
+      pi install "$pkg"
+      echo "  installed $pkg"
+    fi
+  done
+
+  echo "pi settings"
+  PI_SETTINGS="$HOME/.pi/agent/settings.json"
+  if [ -f "$PI_SETTINGS" ] && command -v jq >/dev/null 2>&1; then
+    pi_changed=""
+    current_tel="$(jq -r '.enableInstallTelemetry' "$PI_SETTINGS")"
+    if [ "$current_tel" = "false" ]; then
+      echo "  telemetry off"
+    else
+      tmp="$(mktemp)"
+      jq '.enableInstallTelemetry = false' "$PI_SETTINGS" > "$tmp"
+      mv "$tmp" "$PI_SETTINGS"
+      echo "  disabled telemetry"
+      pi_changed="telemetry"
+    fi
+    current_hide="$(jq -r '.hideThinkingBlock // false' "$PI_SETTINGS")"
+    if [ "$current_hide" = "false" ]; then
+      tmp="$(mktemp)"
+      jq '.hideThinkingBlock = true' "$PI_SETTINGS" > "$tmp"
+      mv "$tmp" "$PI_SETTINGS"
+      echo "  enabled hideThinkingBlock"
+      pi_changed="$pi_changed hideThinkingBlock"
+    else
+      echo "  hideThinkingBlock ok"
+    fi
+    if [ -n "$pi_changed" ]; then
+      echo "  pi: set $pi_changed"
+    fi
+  fi
+else
+  echo "pi CLI not installed — skipping pi package setup (install pi-coding-agent via brew, then re-run)"
 fi
 
 echo "done — all detected harnesses are wired."
