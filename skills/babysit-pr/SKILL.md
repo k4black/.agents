@@ -24,7 +24,7 @@ Run `gh pr view --json mergeable,mergeStateStatus` and branch on BOTH fields:
 - `MERGEABLE` and none of the above → Step 1.
 - `CONFLICTING`/`DIRTY` → rebase onto base: trivial mechanical conflicts (lockfiles, import order, adjacent edits) → resolve, continue, push `--force-with-lease` (never plain `--force`); non-trivial (overlapping logic, schema/API, product judgement) → abort and ask. Re-check mergeability after.
 
-### Step 1: Resolve existing bot threads
+### Step 1: Resolve review threads (bots vs humans)
 
 ```bash
 gh api graphql -F owner='{owner}' -F repo='{repo}' -F pr=<number> -f query='
@@ -43,20 +43,35 @@ query($owner:String!,$repo:String!,$pr:Int!){
 }'
 ```
 
-Page with `after: <endCursor>` while `hasNextPage` (same for 50+-comment threads) — first-page sizes are not the guarantee.
+Page with `after: <endCursor>` while `hasNextPage` (same for 50+-comment threads).
 
-A thread needs attention when `isResolved` is false AND it was **started by a bot** (first comment's author login ends `[bot]` or is a known reviewer bot) — a human reply doesn't make it handled; only resolving does. For each:
+Inspect unresolved threads (`isResolved: false`):
 
-1. **Evaluate on the merits** — read the referenced code; bots produce false positives, never blindly apply.
-2. True positive → fix; batch related fixes into one conventional commit. False positive / won't-fix → no code change, explain in the reply.
-3. **Reply and resolve**:
+#### A. Bot review threads
+Identified when first comment author login ends in `[bot]` or is a known reviewer bot (e.g. `coderabbitai[bot]`, `copilot-pull-request-reviewer[bot]`).
+
+1. **Evaluate on the merits** — inspect referenced code. Bots have false positives; never blindly apply.
+2. **Implement valid fixes** — batch related fixes into conventional commits (`fix: ...`).
+3. **Reply without AI slop**:
+   - Write clear, concise bullet points stating exact action taken or reason for skipping.
+   - **No AI slop**: no pleasantries ("Thanks for the suggestion!"), no filler, no passive voice.
+4. **Reply and resolve bot thread**:
 
 ```bash
-# <comment_id> MUST be the databaseId of the thread's FIRST (top-level) comment —
-# GitHub rejects replies addressed to a reply.
-gh api repos/$OWNER_REPO/pulls/<number>/comments/<comment_id>/replies -f body='<what and why>'
+# <comment_id> MUST be the databaseId of the thread's FIRST (top-level) comment
+gh api repos/$OWNER_REPO/pulls/<number>/comments/<comment_id>/replies -f body='<concise bulletpoint reply>'
 gh api graphql -f query='mutation($id:ID!){resolveReviewThread(input:{threadId:$id}){thread{isResolved}}}' -f id='<thread_id>'
 ```
+
+#### B. Human review threads
+Authored by human reviewers.
+
+1. **Do NOT auto-reply or auto-resolve**.
+2. **Draft the response**:
+   - Review code and requirements.
+   - If the request is clear and agreed, implement the code fix.
+   - Prepare a drafted bullet-point reply explaining the resolution or clarifying questions.
+3. **Present drafts to the user**: Present draft replies and diffs to the human user in chat. The final decision and posting/resolving is strictly the user's responsibility.
 
 PR-level bot comments (`gh pr view --json comments`) can't be resolved and usually duplicate the threads — address the threads and move on. Push fixes before proceeding.
 

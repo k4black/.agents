@@ -13,7 +13,8 @@ to this conversation, and lean enough to be read in one sitting.
 1. **Research the code.** Design against verified facts, not assumptions.
 2. **Grill the user.** Resolve every open decision with the `grill-me` skill.
 3. **Write the doc** using the template below.
-4. **Hand off.** Offer a `critique-loop` review of the doc; implementation
+4. **Render visual representation.** Delegate to a sub-agent to run `design-doc-render` so the user gets an interactive HTML view for easy review.
+5. **Hand off.** Offer a `critique-loop` review of the doc; implementation
    (a later session, the `test-driven-dev` skill, or a ralph loop) takes the doc as input.
 
 ## 1. Research

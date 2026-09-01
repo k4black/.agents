@@ -19,6 +19,8 @@ Re-run it any time: after `git pull`, after adding a skill, after installing a n
 | Codex CLI | `~/.codex/skills/*` + `~/.agents/skills/*` (symlinks) | `~/.codex/AGENTS.md` → `GLOBAL-AGENTS.md` |
 | OpenCode | reads `~/.claude/skills` + `~/.agents/skills` natively | `~/.config/opencode/AGENTS.md` → `GLOBAL-AGENTS.md` |
 
+If local `../hex` is present alongside this repository, `install.sh` also automatically links skills from `../hex/skills/*` (such as `hex`) into every harness.
+
 Tool configuration is never manually-edited: Claude Code marketplaces/plugins go through the
 `claude plugin` CLI, and the Dart/Flutter MCP server through `claude mcp add` /
 `codex mcp add` — so a fresh machine gets the full setup in one run.
@@ -76,15 +78,17 @@ install.sh         the idempotent bootstrap
 | `anki-connect` | Create/find/update Anki flashcards via AnkiConnect |
 | `apple-notes` | Read/reorganize Apple Notes without stripping hyperlinks |
 | `apple-reminders` | Add/view/complete Apple Reminders |
-| `babysit-pr` | Drive a PR to merge-ready: fix CI, resolve bot review threads (gh-only) |
+| `babysit-pr` | Drive a PR to merge-ready: fix CI, resolve bot review threads (slop-free), draft human review replies |
 | `code-review` | Two-axis diff review — Standards (repo docs + Fowler smell baseline + simplify/dedup) and Spec (vs the design doc/issue) — in parallel sub-agents |
-| `critique-loop` | Cross-model adversarial review (Codex/Cursor navigator), plan + code flows |
-| `design-doc` | Research → grill → write `docs/design/yyyy-MM-dd-<slug>.md` feature design doc |
+| `critique-loop` | Cross-model adversarial review (Codex/OpenCode/Pi navigator), single-pass critique on plans or code diffs |
+| `design-doc` | Research → grill → write `docs/design/yyyy-MM-dd-<slug>.md` feature design doc, triggers visual rendering |
+| `design-doc-render` | Interactive, self-contained HTML visualization for design docs and plans (delegates to sub-agent during authoring) |
 | `diagnosing-bugs` | Feedback-loop-first diagnosis for hard bugs: build a tight red-capable loop before any hypothesis |
 | `domain-modeling` | Maintain the project's Terminology section (domain glossary) in AGENTS.md |
 | `github-project-setup` | Harden a GitHub repo to one target state: squash-only merges, protected default branch (ruleset), Dependabot, PR-title lint (user-triggered) |
 | `grill-me` | Relentless interview to stress-test a plan until shared understanding |
 | `handoff` | Compact the current conversation into a handoff doc for the next session |
+| `hex` | Multi-round bounded, resumable agent loop runner using the `hex` CLI (linked from local `../hex`) |
 | `improve-agents-md` | Create/audit/compress a project's AGENTS.md/CLAUDE.md against the canonical structure, decide which areas earn nested files (user-triggered) |
 | `improve-codebase-architecture` | Scan for module-deepening opportunities, visual HTML report, grill through picks |
 | `ponytail` | Lazy senior dev mode — YAGNI ladder, stdlib/native before custom code, shortest diff; `review` (diff) and `audit` (repo) sub-flows (user-triggered) |

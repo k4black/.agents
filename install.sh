@@ -16,6 +16,8 @@ set -euo pipefail
 
 REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SKILLS_SRC="$REPO/skills"
+HEX_REPO="$(cd "$REPO/../hex" 2>/dev/null && pwd || true)"
+HEX_SKILLS_SRC="$HEX_REPO/skills"
 
 # --- helpers -----------------------------------------------------------------
 
@@ -52,12 +54,20 @@ for dst in "$HOME/.claude/skills" "$HOME/.agents/skills" "$HOME/.codex/skills"; 
     [ -d "$skill" ] || continue
     link "${skill%/}" "$dst/$(basename "$skill")"
   done
+  if [ -n "$HEX_REPO" ] && [ -d "$HEX_SKILLS_SRC" ]; then
+    echo "  linking local hex skills from $HEX_SKILLS_SRC"
+    for skill in "$HEX_SKILLS_SRC"/*/; do
+      [ -d "$skill" ] || continue
+      link "${skill%/}" "$dst/$(basename "$skill")"
+    done
+  fi
   # cleanup, ownership-scoped: only links we (or the legacy dotfiles setup) created
   for existing in "$dst"/*; do
     [ -L "$existing" ] || continue
     target="$(readlink "$existing")"
     if [[ "$target" == *"/.dotfiles/plugins/"* ]] \
-       || { [[ "$target" == "$SKILLS_SRC/"* ]] && [ ! -e "$existing" ]; }; then
+       || { [[ "$target" == "$SKILLS_SRC/"* ]] && [ ! -e "$existing" ]; } \
+       || { [ -n "$HEX_SKILLS_SRC" ] && [[ "$target" == "$HEX_SKILLS_SRC/"* ]] && [ ! -e "$existing" ]; }; then
       rm "$existing"
       echo "  removed stale $existing -> $target"
     fi
