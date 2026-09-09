@@ -17,8 +17,8 @@ export default {
     }
 
     const candidates = [
-      path.resolve(process.env.HOME || "", "Projects/personal/.agents/permissions/check_destructive.py"),
-      path.resolve(process.env.HOME || "", ".agents/permissions/check_destructive.py"),
+      path.resolve(process.env.HOME || "", "Projects/personal/.agents/permissions/check_destructive.sh"),
+      path.resolve(process.env.HOME || "", ".agents/permissions/check_destructive.sh"),
     ];
 
     const scriptPath = candidates.find((p) => fs.existsSync(p));
@@ -27,7 +27,7 @@ export default {
     }
 
     try {
-      execFileSync("python3", [scriptPath, command], {
+      execFileSync(scriptPath, [command], {
         stdio: ["ignore", "pipe", "pipe"],
       });
     } catch (err) {

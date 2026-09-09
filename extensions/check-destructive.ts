@@ -17,12 +17,11 @@ export default function (pi: any) {
       return;
     }
 
-    // Resolve check_destructive.py from repo permissions folder or ~/.dotfiles/.agents
+    // Resolve check_destructive.sh from repo permissions folder or ~/.dotfiles/.agents
     const candidates = [
-      path.resolve(__dirname, "../../permissions/check_destructive.py"),
-      path.resolve(process.env.HOME || "", ".agents/permissions/check_destructive.py"),
-      path.resolve(process.env.HOME || "", "Projects/personal/.agents/permissions/check_destructive.py"),
-      path.resolve(process.env.HOME || "", "Projects/personal/agentic-tools/permissions/check_destructive.py"),
+      path.resolve(__dirname, "../../permissions/check_destructive.sh"),
+      path.resolve(process.env.HOME || "", ".agents/permissions/check_destructive.sh"),
+      path.resolve(process.env.HOME || "", "Projects/personal/.agents/permissions/check_destructive.sh"),
     ];
 
     let scriptPath = candidates.find((p) => fs.existsSync(p));
@@ -31,7 +30,7 @@ export default function (pi: any) {
     }
 
     try {
-      execFileSync("python3", [scriptPath, command], {
+      execFileSync(scriptPath, [command], {
         stdio: ["ignore", "pipe", "pipe"],
       });
     } catch (err: any) {

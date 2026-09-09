@@ -211,7 +211,7 @@ if command -v claude >/dev/null 2>&1 && command -v jq >/dev/null 2>&1; then
   before="$(jq '.permissions.allow // [] | length' "$SETTINGS")"
   tmp="$(mktemp)"
   # append missing rules; defaultMode=auto only when unset; wire PreToolUse hook
-  jq --slurpfile rules "$REPO/permissions/claude-allow.json" --arg hookCmd "python3 $REPO/permissions/check_destructive.py" '
+  jq --slurpfile rules "$REPO/permissions/claude-allow.json" --arg hookCmd "$REPO/permissions/check_destructive.sh" '
     .permissions.allow = ((.permissions.allow // []) + ($rules[0] - (.permissions.allow // []))) |
     .permissions.defaultMode //= "auto" |
     .hooks.PreToolUse = ([
