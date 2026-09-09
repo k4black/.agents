@@ -200,23 +200,31 @@ fi
 #   echo "ralph missing or < 2.10 — skipping (npm i -g @ralph-orchestrator/ralph-cli, then re-run)"
 # fi
 
-# --- 6. permission allowlists: read-only commands -----------------------------
+# --- 6. permission allowlists & destructive guards -----------------------------
 
 # Claude Code: merge permissions/claude-allow.json into ~/.claude/settings.json
-# (permissions merge additively across scopes; no CLI exists for rules, and the
-# docs name editing settings.json as the supported mechanism). Merge only ADDS
-# missing rules — user's own rules and all other settings are untouched.
+# and wire PreToolUse destructive guard hook
 if command -v claude >/dev/null 2>&1 && command -v jq >/dev/null 2>&1; then
-  echo "claude permission allowlist"
+  echo "claude permission allowlist & hooks"
   SETTINGS="$HOME/.claude/settings.json"
   [ -f "$SETTINGS" ] || echo '{}' > "$SETTINGS"
   before="$(jq '.permissions.allow // [] | length' "$SETTINGS")"
   tmp="$(mktemp)"
-  # append only the missing rules; defaultMode=auto (classifier auto-approve,
-  # NOT bypassPermissions) only when unset, so a manual choice survives re-runs
-  jq --slurpfile rules "$REPO/permissions/claude-allow.json" '
+  # append missing rules; defaultMode=auto only when unset; wire PreToolUse hook
+  jq --slurpfile rules "$REPO/permissions/claude-allow.json" --arg hookCmd "python3 $REPO/permissions/check_destructive.py" '
     .permissions.allow = ((.permissions.allow // []) + ($rules[0] - (.permissions.allow // []))) |
-    .permissions.defaultMode //= "auto"
+    .permissions.defaultMode //= "auto" |
+    .hooks.PreToolUse = ([
+      {
+        matcher: "Bash",
+        hooks: [
+          {
+            type: "command",
+            command: $hookCmd
+          }
+        ]
+      }
+    ])
   ' "$SETTINGS" > "$tmp"
   mv "$tmp" "$SETTINGS"
   after="$(jq '.permissions.allow | length' "$SETTINGS")"
@@ -225,8 +233,16 @@ if command -v claude >/dev/null 2>&1 && command -v jq >/dev/null 2>&1; then
   else
     echo "  allow rules ok"
   fi
+  echo "  claude: PreToolUse destructive guard hook wired"
 else
   echo "claude or jq not found — skipping permission allowlist"
+fi
+
+# OpenCode: install destructive check plugin
+if [ -d "$HOME/.config/opencode" ]; then
+  mkdir -p "$HOME/.config/opencode/plugins"
+  link "$REPO/plugins/check-destructive.js" "$HOME/.config/opencode/plugins/check-destructive.js"
+  echo "  opencode: check-destructive plugin linked"
 fi
 
 # Codex: execpolicy rules file — additive (codex loads every file in ~/.codex/rules/;
@@ -289,7 +305,10 @@ if command -v pi >/dev/null 2>&1; then
     fi
   done
 
-  echo "pi settings"
+  echo "pi extensions"
+  mkdir -p "$HOME/.pi/agent/extensions"
+  link "$REPO/extensions/check-destructive.ts" "$HOME/.pi/agent/extensions/check-destructive.ts"
+  echo "  pi: check-destructive extension linked"
   PI_SETTINGS="$HOME/.pi/agent/settings.json"
   if [ -f "$PI_SETTINGS" ] && command -v jq >/dev/null 2>&1; then
     pi_changed=""

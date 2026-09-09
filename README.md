@@ -1,7 +1,7 @@
-# agentic-tools
+# .agents
 
 Personal agentic setup: skills, global agent rules, hooks, and workflows — separated from
-dotfiles (which stays a pure shell/system config repo).
+system dotfiles (which stays a pure shell/system config repo in `.dotfiles`).
 
 **One command wires every agent harness on any machine, idempotently:**
 
@@ -18,6 +18,7 @@ Re-run it any time: after `git pull`, after adding a skill, after installing a n
 | Claude Code | `~/.claude/skills/*` (symlinks) | `~/.claude/CLAUDE.md` → `GLOBAL-AGENTS.md` |
 | Codex CLI | `~/.codex/skills/*` + `~/.agents/skills/*` (symlinks) | `~/.codex/AGENTS.md` → `GLOBAL-AGENTS.md` |
 | OpenCode | reads `~/.claude/skills` + `~/.agents/skills` natively | `~/.config/opencode/AGENTS.md` → `GLOBAL-AGENTS.md` |
+| Pi | `~/.pi/agent/extensions/*` (destructive guard) | `~/.pi/agent/AGENTS.md` → `GLOBAL-AGENTS.md` |
 
 If local `../hex` is present alongside this repository, `install.sh` also automatically links skills from `../hex/skills/*` (such as `hex`) into every harness.
 
@@ -79,6 +80,7 @@ install.sh         the idempotent bootstrap
 | `apple-notes` | Read/reorganize Apple Notes without stripping hyperlinks |
 | `apple-reminders` | Add/view/complete Apple Reminders |
 | `babysit-pr` | Drive a PR to merge-ready: fix CI, resolve bot review threads (slop-free), draft human review replies |
+| `cleanup-git` | Reclaim disk space by finding and safely removing merged git worktrees, merged branches, and scratch dirs without `--force` |
 | `code-review` | Two-axis diff review — Standards (repo docs + Fowler smell baseline + simplify/dedup) and Spec (vs the design doc/issue) — in parallel sub-agents |
 | `critique-loop` | Cross-model adversarial review (Codex/OpenCode/Pi navigator), single-pass critique on plans or code diffs |
 | `design-doc` | Research → grill → write `docs/design/yyyy-MM-dd-<slug>.md` feature design doc, triggers visual rendering |
