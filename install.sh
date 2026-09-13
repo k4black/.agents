@@ -296,7 +296,8 @@ if command -v pi >/dev/null 2>&1; then
   for pkg in \
     "npm:pi-web-access" \
     "npm:pi-mcp-adapter" \
-    "npm:pi-subagents"; do
+    "npm:pi-subagents" \
+    "npm:@juicesharp/rpiv-ask-user-question"; do
     if grep -qF "$pkg" <<<"$installed"; then
       echo "  $pkg ok"
     else
