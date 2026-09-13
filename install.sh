@@ -338,25 +338,18 @@ if command -v pi >/dev/null 2>&1; then
     fi
   fi
 
-  # pi-web-access: raw search results, no curator popup (workflow=none)
+  # pi-web-access: no curator tab
   PI_WEB_SEARCH="$HOME/.pi/agent/web-search.json"
   if command -v jq >/dev/null 2>&1; then
-    if [ ! -f "$PI_WEB_SEARCH" ]; then
+    current_wf="$(jq -r '.workflow // "unset"' "$PI_WEB_SEARCH" 2>/dev/null || echo unset)"
+    if [ "$current_wf" = "unset" ]; then
       mkdir -p "$(dirname "$PI_WEB_SEARCH")"
-      printf '{\n  "workflow": "none"\n}\n' > "$PI_WEB_SEARCH"
-      echo "  web-search: created with workflow=none"
+      tmp="$(mktemp)"
+      jq '.workflow = "none"' "$PI_WEB_SEARCH" > "$tmp" 2>/dev/null || echo '{"workflow":"none"}' > "$tmp"
+      mv "$tmp" "$PI_WEB_SEARCH"
+      echo "  web-search: workflow=none"
     else
-      current_wf="$(jq -r '.workflow // "unset"' "$PI_WEB_SEARCH")"
-      if [ "$current_wf" = "none" ]; then
-        echo "  web-search: workflow=none ok"
-      elif [ "$current_wf" = "unset" ]; then
-        tmp="$(mktemp)"
-        jq '.workflow = "none"' "$PI_WEB_SEARCH" > "$tmp"
-        mv "$tmp" "$PI_WEB_SEARCH"
-        echo "  web-search: set workflow=none"
-      else
-        echo "  web-search: workflow=$current_wf (leaving as is)"
-      fi
+      echo "  web-search: workflow=$current_wf ok"
     fi
   else
     echo "jq not found — skipping web-search workflow config"
