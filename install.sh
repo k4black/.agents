@@ -337,6 +337,30 @@ if command -v pi >/dev/null 2>&1; then
       echo "  pi: set $pi_changed"
     fi
   fi
+
+  # pi-web-access: raw search results, no curator popup (workflow=none)
+  PI_WEB_SEARCH="$HOME/.pi/agent/web-search.json"
+  if command -v jq >/dev/null 2>&1; then
+    if [ ! -f "$PI_WEB_SEARCH" ]; then
+      mkdir -p "$(dirname "$PI_WEB_SEARCH")"
+      printf '{\n  "workflow": "none"\n}\n' > "$PI_WEB_SEARCH"
+      echo "  web-search: created with workflow=none"
+    else
+      current_wf="$(jq -r '.workflow // "unset"' "$PI_WEB_SEARCH")"
+      if [ "$current_wf" = "none" ]; then
+        echo "  web-search: workflow=none ok"
+      elif [ "$current_wf" = "unset" ]; then
+        tmp="$(mktemp)"
+        jq '.workflow = "none"' "$PI_WEB_SEARCH" > "$tmp"
+        mv "$tmp" "$PI_WEB_SEARCH"
+        echo "  web-search: set workflow=none"
+      else
+        echo "  web-search: workflow=$current_wf (leaving as is)"
+      fi
+    fi
+  else
+    echo "jq not found — skipping web-search workflow config"
+  fi
 else
   echo "pi CLI not installed — skipping pi package setup (install pi-coding-agent via brew, then re-run)"
 fi

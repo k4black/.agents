@@ -26,6 +26,11 @@ Tool configuration is never manually-edited: Claude Code marketplaces/plugins go
 `claude plugin` CLI, and the Dart/Flutter MCP server through `claude mcp add` /
 `codex mcp add` — so a fresh machine gets the full setup in one run.
 
+The Pi web-access extension is configured for headless search: `install.sh` sets
+`"workflow": "none"` in `~/.pi/agent/web-search.json`, so `web_search` returns raw results and
+never opens the curator browser tab. It only adds the key when absent — an explicit
+`summary-review` or `auto-summary` choice is left alone.
+
 Read-only commands (`ls`, `grep`, `find`, `git log/diff/…`, `gh pr view/…`) are pre-approved in
 every repo: `permissions/claude-allow.json` is merged into user-level
 `~/.claude/settings.json` (rules merge additively across scopes; project denies still win), and
