@@ -45,6 +45,17 @@ link() {
   echo "  linked $linkpath -> $target"
 }
 
+# --- 0. preflight: k4black/homelab installs every CLI; this script only wires them
+
+missing=()
+for cmd in claude codex opencode pi jq dart; do
+  command -v "$cmd" >/dev/null 2>&1 || missing+=("$cmd")
+done
+if [ ${#missing[@]} -gt 0 ]; then
+  echo "missing: ${missing[*]} — install via the homelab MacBook playbook, then re-run" >&2
+  exit 1
+fi
+
 # --- 1. skills: symlink into every harness dir -------------------------------
 
 for dst in "$HOME/.claude/skills" "$HOME/.agents/skills" "$HOME/.codex/skills"; do

@@ -11,6 +11,9 @@ system dotfiles (which stays a pure shell/system config repo in `.dotfiles`).
 
 Re-run it any time: after `git pull`, after adding a skill, after installing a new agent CLI.
 
+It installs no binaries: the homelab MacBook playbook does. It exits 1 when `claude`, `codex`,
+`opencode`, `pi`, `jq` or `dart` is missing.
+
 ## What it wires
 
 | Harness | Skills | Global rules |
