@@ -21,30 +21,9 @@ Two flows:
 
 All reviews return directly as standard text in stdout. No `.critique-loop/` scratchpads or artifact files are written to disk.
 
-## Harness Invocation Cheat Sheet
+## Harness invocation
 
-Select the desired harness and model. When using OpenRouter, models **must** include the prefix: `openrouter/<provider>/<model>` (e.g. `openrouter/anthropic/claude-3.7-sonnet`, `openrouter/google/gemini-2.5-pro`, `openrouter/z-ai/glm-5.3-flash`).
-
-### 1. Codex CLI (`codex`)
-- **Default / One-shot:**
-  ```bash
-  codex exec [-m <model>] "<PROMPT>" < /dev/null
-  ```
-  *(Note: `< /dev/null` is mandatory to prevent stdin blocking).*
-
-### 2. OpenCode CLI (`opencode`)
-- **Default / One-shot:**
-  ```bash
-  opencode run [-m <provider/model>] [--variant high] "<PROMPT>"
-  ```
-  *(e.g. `opencode run -m openrouter/anthropic/claude-3.7-sonnet --variant high "<PROMPT>"`).*
-
-### 3. Pi CLI (`pi`)
-- **Default / Ephemeral Print:**
-  ```bash
-  pi -p [--model <model>] [--thinking high] --no-session "<PROMPT>"
-  ```
-  *(e.g. `pi -p --model openrouter/google/gemini-2.5-pro:high --no-session "<PROMPT>"`).*
+Run the navigator with the `agent-cli` skill: non-interactive entry point, read-only sandbox, stdin from `/dev/null`. The navigator must run a different model than the driver.
 
 ---
 

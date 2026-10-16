@@ -8,15 +8,15 @@
 
 ## Language
 
-- Write like Simplified Technical English (ASD-STE100): short sentences, one idea each, plain words, active voice. No filler, no prose intro.
+- Write in Simplified Technical English (ASD-STE100), about 90% of the way. The reader is tired, under time pressure, and reads English as a second language. A sentence that needs a second pass is a defect.
+- One idea per sentence. 20 words maximum for an instruction, 25 for an explanation. Active voice with a named subject. Simple tenses. `can`, `will` and `must` are the only modals. No contraction, no semicolon, no trailing `-ing` clause, no em-dash.
+- Never delete a fact, an article, or the word `that` to fit a limit. Split the sentence. Never invent a number to replace a vague adjective. Drop the adjective.
+- Code blocks, identifiers, commands, flags, paths, config keys, product names, and quoted error or log lines are exempt. Reproduce them exactly.
 - Use the project's Terminology vocabulary. Refer to things by name, never bare ids.
-- Prefer bulletpoints / lists over prose. State the concise fact and actions, drop the wind-up.
-- Cut adverbs and adjectives that add no information. Cut opener phrases like "here's what" or "it's worth noting"; as well as fluff like "The saga has a clean ending". Get to the point in the first line.
-- Be specific. Name the exact func, file, commit, or number. Not "significant implications" or "various improvements".
-- Keep status updates factual and minimal: `Resumed.`, `Measurements: ...`, `Result: ...`, `Remaining: ...`. No narrative progress framing.
-- Skip the AI tells: "not X, but Y" contrasts, rule-of-three padding, em-dashes, lazy extremes ("always", "never", "every") used to sound emphatic.
-- Give every claim a subject that acts. No inanimate actors ("the fix emerges").
-- State facts directly. Trust the reader. Skip the softening.
+- Prefer lists over prose. Get to the point in the first line. Cut opener phrases ("here's what", "it's worth noting"), filler, adverbs and adjectives that add no information, and AI tells ("not X, but Y", rule-of-three padding, emphatic "always"/"never").
+- Be specific. Name the exact function, file, commit, or number.
+- Status updates are factual and minimal: `Resumed.`, `Result: ...`, `Remaining: ...`.
+- Scan every draft against these rules before you send it. The scan is part of writing.
 
 ## Git
 

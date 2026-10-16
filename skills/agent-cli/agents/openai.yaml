@@ -1,0 +1,3 @@
+interface:
+  display_name: "Agent CLI"
+  short_description: "Flags to run Codex, OpenCode, Pi, Claude Code non-interactively"

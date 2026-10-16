@@ -14,7 +14,7 @@ for skill in skills/*/; do
   cp -R "$skill" "$tmp/$name"
   sed -i.bak -E '/^(argument-hint|disable-model-invocation):/d' "$tmp/$name/SKILL.md"
   rm -f "$tmp/$name/SKILL.md.bak"
-  if out=$(npx --yes skills-ref@0.1.5 validate "$tmp/$name" 2>&1); then
+  if out=$(npx --yes --registry https://registry.npmjs.org skills-ref@0.1.5 validate "$tmp/$name" 2>&1); then
     echo "Valid skill: $name"
   else
     echo "$out" | sed "s|$tmp/|skills/|g"

@@ -36,9 +36,9 @@ Apply the **deletion test** to anything you suspect is shallow: would deleting i
 
 ### 2. Present candidates as an HTML report
 
-Write a self-contained HTML file to the OS temp directory so nothing lands in the repo. Resolve the temp dir from `$TMPDIR`, falling back to `/tmp` (or `%TEMP%` on Windows), and write to `<tmpdir>/architecture-review-<timestamp>.html` so each run gets a fresh file. Open it for the user — `xdg-open <path>` on Linux, `open <path>` on macOS, `start <path>` on Windows — and tell them the absolute path.
+Build and deliver the page with the `html-artifact` skill (report archetype). It owns the build contract, the glance gate, and the output path.
 
-The report uses **Tailwind via CDN** for layout and styling, and **Mermaid via CDN** for diagrams where a graph/flow/sequence reliably communicates the structure. Mix Mermaid with hand-crafted CSS/SVG visuals — use Mermaid when relationships are graph-shaped (call graphs, dependencies, sequences), and hand-built divs/SVG when you want something more editorial (mass diagrams, cross-sections, collapse animations). Each candidate gets a **before/after visualisation**. Be visual.
+Each candidate gets a **before/after visualisation**: a Mermaid graph for call flow and dependencies, hand-built boxes when the "after" must read as one thick deep module, a cross-section of layers for layered shallowness, a mass diagram (interface rectangle versus implementation rectangle) for a wide interface. Mix the patterns. Use the project glossary for domain nouns, and these architecture terms exactly: module, interface, implementation, deep, shallow, seam, adapter, leverage, locality. Never "component", "service", "layer", "boundary" for those.
 
 For each candidate, render a card with:
 
@@ -54,8 +54,6 @@ End the report with a **Top recommendation** section: which candidate you'd tack
 **Use the Terminology section's vocabulary for the domain, and the architecture vocabulary above for the architecture.** If Terminology defines "Order," talk about "the Order intake module" — not "the FooBarHandler," and not "the Order service."
 
 **Decision conflicts**: if a candidate contradicts a locked Decision in `docs/design/`, only surface it when the friction is real enough to warrant reopening that doc. Mark it clearly in the card (a warning callout: _"contradicts docs/design/2026-01-10-x.md — but worth reopening because…"_). Don't list every theoretical refactor a past decision forbids.
-
-See [HTML-REPORT.md](HTML-REPORT.md) for the full HTML scaffold, diagram patterns, and styling guidance.
 
 Do NOT propose interfaces yet. After the file is written, ask the user: "Which of these would you like to explore?"
 
