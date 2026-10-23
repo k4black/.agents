@@ -95,6 +95,7 @@ install.sh         the idempotent bootstrap
 | `design-doc` | Research → grill → write `docs/design/yyyy-MM-dd-<slug>.md` feature design doc, renders an interactive HTML view via `html-artifact` |
 | `diagnosing-bugs` | Feedback-loop-first diagnosis for hard bugs: build a tight red-capable loop before any hypothesis |
 | `domain-modeling` | Maintain the project's Terminology section (domain glossary) in AGENTS.md |
+| `freecad-mcp` | Create and edit FreeCAD models through MCP, recover from execution failures, and export finished parts for printing |
 | `github-project-setup` | Harden a GitHub repo to one target state: squash-only merges, protected default branch (ruleset), Dependabot, PR-title lint (user-triggered) |
 | `grill-me` | Relentless interview to stress-test a plan until shared understanding |
 | `handoff` | Compact the current conversation into a handoff doc for the next session |
