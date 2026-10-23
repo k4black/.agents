@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 # One idempotent run hooks every agent harness on this machine:
 #   Claude Code, Codex CLI, OpenCode (+ anything reading ~/.agents/skills).
-# Safe to re-run any time (after git pull, after adding a skill, on a fresh machine).
+# Run on a fresh machine or after installing an agent CLI. New skills need no re-run.
 #
-#   skills/*            -> symlinked into ~/.claude/skills, ~/.agents/skills, ~/.codex/skills
+#   skills/             -> ~/.claude/skills, ~/.agents/skills, ~/.codex/skills are one symlink each
 #                          (OpenCode reads ~/.claude/skills + ~/.agents/skills natively)
 #   GLOBAL-AGENTS.md    -> ~/.claude/CLAUDE.md, ~/.codex/AGENTS.md, ~/.config/opencode/AGENTS.md
 #   Claude plugins/MCP  -> installed via the claude/codex CLIs (never hand-edited configs)
@@ -15,9 +15,6 @@
 set -euo pipefail
 
 REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-SKILLS_SRC="$REPO/skills"
-HEX_REPO="$(cd "$REPO/../hex" 2>/dev/null && pwd || true)"
-HEX_SKILLS_SRC="$HEX_REPO/skills"
 
 # --- helpers -----------------------------------------------------------------
 
@@ -56,34 +53,9 @@ if [ ${#missing[@]} -gt 0 ]; then
   exit 1
 fi
 
-# --- 1. skills: symlink into every harness dir -------------------------------
+# --- 1. skills: symlink into every harness dir (link-skills.sh) --------------
 
-for dst in "$HOME/.claude/skills" "$HOME/.agents/skills" "$HOME/.codex/skills"; do
-  mkdir -p "$dst"
-  echo "skills -> $dst"
-  for skill in "$SKILLS_SRC"/*/; do
-    [ -d "$skill" ] || continue
-    link "${skill%/}" "$dst/$(basename "$skill")"
-  done
-  if [ -n "$HEX_REPO" ] && [ -d "$HEX_SKILLS_SRC" ]; then
-    echo "  linking local hex skills from $HEX_SKILLS_SRC"
-    for skill in "$HEX_SKILLS_SRC"/*/; do
-      [ -d "$skill" ] || continue
-      link "${skill%/}" "$dst/$(basename "$skill")"
-    done
-  fi
-  # cleanup, ownership-scoped: only links we (or the legacy dotfiles setup) created
-  for existing in "$dst"/*; do
-    [ -L "$existing" ] || continue
-    target="$(readlink "$existing")"
-    if [[ "$target" == *"/.dotfiles/plugins/"* ]] \
-       || { [[ "$target" == "$SKILLS_SRC/"* ]] && [ ! -e "$existing" ]; } \
-       || { [ -n "$HEX_SKILLS_SRC" ] && [[ "$target" == "$HEX_SKILLS_SRC/"* ]] && [ ! -e "$existing" ]; }; then
-      rm "$existing"
-      echo "  removed stale $existing -> $target"
-    fi
-  done
-done
+"$REPO/link-skills.sh"
 
 # --- 2. global rules ----------------------------------------------------------
 
@@ -97,6 +69,12 @@ link "$REPO/GLOBAL-AGENTS.md" "$HOME/.pi/agent/AGENTS.md"
 # --- 3. Claude Code marketplaces + plugins (via claude CLI, never hand-edits) -
 
 if command -v claude >/dev/null 2>&1; then
+  echo "claude project instructions"
+  claude plugin enable cc-plugin-agents-md@builtin --scope user
+  claude plugin configure cc-plugin-agents-md@builtin --values-stdin <<'JSON'
+{"instructionFiles":"claude-md-and-agents-md"}
+JSON
+
   echo "claude marketplaces"
   marketplaces="$(claude plugin marketplace list 2>/dev/null || true)"
   add_marketplace() {
@@ -182,6 +160,26 @@ if command -v dart >/dev/null 2>&1; then
   fi
 else
   echo "dart not installed — skipping Dart/Flutter MCP server"
+fi
+
+# FreeCAD MCP server (https://github.com/neka-nat/freecad-mcp). The FreeCAD addon is a manual step, see README.
+if [ -d /Applications/FreeCAD.app ] && command -v uvx >/dev/null 2>&1; then
+  if command -v claude >/dev/null 2>&1; then
+    if claude mcp list 2>/dev/null | grep -q '^freecad:'; then
+      echo "  claude: freecad ok"
+    else
+      claude mcp add --scope user --transport stdio freecad -- uvx freecad-mcp
+      echo "  claude: added freecad"
+    fi
+  fi
+  if command -v codex >/dev/null 2>&1; then
+    if codex mcp list 2>/dev/null | grep -q 'freecad'; then
+      echo "  codex: freecad ok"
+    else
+      codex mcp add freecad -- uvx freecad-mcp
+      echo "  codex: added freecad"
+    fi
+  fi
 fi
 
 # ralph (disabled): ralph-orchestrator MCP server — drive ralph loops from Claude directly

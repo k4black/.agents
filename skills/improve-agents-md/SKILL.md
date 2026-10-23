@@ -1,11 +1,11 @@
 ---
 name: improve-agents-md
-description: Create, review, or clean up a project's AGENTS.md/CLAUDE.md — audit against the canonical structure, prune stale or derivable content, compress pitfalls, fix misfiled sections, decide which areas earn their own nested file.
+description: Create, review, or maintain a project's AGENTS.md. Keep instructions current, prune stale or derivable content, fix misfiled sections, and decide which areas require nested files.
 argument-hint: "Project or sub-project path (default: repo root)"
 disable-model-invocation: true
 ---
 
-# AGENTS.md/CLAUDE.md Maintenance
+# AGENTS.md Maintenance
 
 Own the project's agent docs: one canonical structure, created when missing,
 audited and compressed when present. These tests govern every line.
@@ -25,12 +25,11 @@ READMEs.
 One `AGENTS.md` per project, plus nested files for areas that earn one (see
 below). Agents read the *nearest* file walking up and **all levels stack
 additively** — a nested file is read in addition to root, never instead of it.
-**`CLAUDE.md` is always a symlink**: `ln -s AGENTS.md CLAUDE.md`. Target well
-under ~200 lines per file.
+Keep `AGENTS.md` up to date as the project changes. Target fewer than 200 lines per file.
 
 ```
 repo/
-├── AGENTS.md            # + CLAUDE.md -> AGENTS.md symlink
+├── AGENTS.md
 ├── services/api/
 │   ├── AGENTS.md        # nested file, specific for this domain
 └── apps/web/
@@ -105,8 +104,7 @@ Explore first (README, build files, existing agent docs, a stretch of
    directory map, conventions that differ from defaults, gotchas from README 
    warnings / CI configs / recent fix commits.
 2. Write `AGENTS.md` per the structure; skip sections with nothing non-obvious.
-3. `ln -s AGENTS.md CLAUDE.md` (if a real CLAUDE.md already exists, merge its
-   content in first, then replace it with the symlink).
+3. Preserve useful existing instructions during migration.
 4. Apply the two gates before offering any nested file — never scaffold empties.
 
 ### AGENTS.md exists — review and maintain
@@ -126,8 +124,7 @@ Audit, then present the findings and proposed edits as a short report
 5. **Split check** — run the two gates over nested files in both directions:
    files failing them collapse into "Where things live" entries at root;
    qualifying areas without a file get one, with the pointer header.
-6. **Symlink check** — if CLAUDE.md and AGENTS.md are separate real files,
-   merge and symlink (AGENTS.md is the real file).
+6. **References** — update stale references to `AGENTS.md` in project documentation.
 7. Report the before/after line count.
 
 ## Smells
@@ -148,5 +145,4 @@ Audit, then present the findings and proposed edits as a short report
   belongs in hooks/permissions, multi-step procedures belong in skills/docs.
 - Emphasis (**IMPORTANT**, "X, NOT Y") sparingly — it works because it's rare.
 - Conflicting rules across files are picked arbitrarily by agents — dedupe.
-- Keep the global layer (`~/.claude/CLAUDE.md`, `~/.codex/AGENTS.md`) out of 
-  project files — never duplicate global rules locally.
+- Keep global instructions out of project `AGENTS.md` files. Do not duplicate shared rules locally.

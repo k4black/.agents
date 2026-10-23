@@ -9,7 +9,8 @@ system dotfiles (which stays a pure shell/system config repo in `.dotfiles`).
 ./install.sh
 ```
 
-Re-run it any time: after `git pull`, after adding a skill, after installing a new agent CLI.
+Re-run it after you install a new agent CLI. `link-skills.sh` creates three root symlinks to `skills/`.
+Add a new `skills/<name>/SKILL.md` without another installer run. Each agent discovers the skill through the existing links.
 
 It installs no binaries: the homelab MacBook playbook does. It exits 1 when `claude`, `codex`,
 `opencode`, `pi`, `jq` or `dart` is missing.
@@ -18,16 +19,82 @@ It installs no binaries: the homelab MacBook playbook does. It exits 1 when `cla
 
 | Harness | Skills | Global rules |
 |---|---|---|
-| Claude Code | `~/.claude/skills/*` (symlinks) | `~/.claude/CLAUDE.md` → `GLOBAL-AGENTS.md` |
-| Codex CLI | `~/.codex/skills/*` + `~/.agents/skills/*` (symlinks) | `~/.codex/AGENTS.md` → `GLOBAL-AGENTS.md` |
+| Claude Code | `~/.claude/skills` → `skills/` | `~/.claude/CLAUDE.md` → `GLOBAL-AGENTS.md` |
+| Codex CLI | `~/.codex/skills` and `~/.agents/skills` → `skills/` | `~/.codex/AGENTS.md` → `GLOBAL-AGENTS.md` |
 | OpenCode | reads `~/.claude/skills` + `~/.agents/skills` natively | `~/.config/opencode/AGENTS.md` → `GLOBAL-AGENTS.md` |
-| Pi | `~/.pi/agent/extensions/*` (destructive guard) | `~/.pi/agent/AGENTS.md` → `GLOBAL-AGENTS.md` |
+| Pi | reads `~/.agents/skills`; `~/.pi/agent/extensions/*` contains extensions | `~/.pi/agent/AGENTS.md` → `GLOBAL-AGENTS.md` |
 
-If local `../hex` is present alongside this repository, `install.sh` also automatically links skills from `../hex/skills/*` (such as `hex`) into every harness.
+`skills/hex` points to `../../hex/skills/hex`. It resolves when the `hex` repository is a sibling checkout.
+
+### Skill discovery
+
+Keep shared skills directly under `skills/<name>/SKILL.md`. Grouped collections are not portable across all four agents.
+
+| Agent | Discovery below a skill root | Directory symlinks |
+|---|---|---|
+| Claude Code 2.1.308 | Immediate skill folders only. A local discovery probe skipped `group/<name>/SKILL.md`. | Individual skill folders and the root work. A linked collection did not work. |
+| Codex | Recursive discovery. | Supported. |
+| Pi 1.3.0 | Recursive discovery. Stops below a folder containing `SKILL.md`. | Supported. |
+| OpenCode 2.1.2 | Recursive discovery, up to six directories. Stops below a folder containing `SKILL.md`. | Supported. |
+
+Sources: [Claude Code](https://code.claude.com/docs/en/skills),
+[Codex](https://developers.openai.com/codex/skills/),
+[Pi](https://github.com/earendil-works/pi/blob/main/packages/coding-agent/docs/skills.md),
+[OpenCode v2](https://opencode.ai/v2/docs/skills/).
+
+Claude Code prevents a shared layout based on links to grouped collections.
+The three root links serve Claude Code, Codex, Pi, and OpenCode without links for individual skills.
+An existing session can require a skill reload or restart after an addition. No filesystem relink is necessary.
+
+On first setup, the linker moves local skill entries into `skills/` when their names are available.
+It removes old links from this setup. It backs up collisions and other remaining entries before replacing each directory.
+Backups use `<path>.pre-agentic-tools.<timestamp>.<pid>.bak`. Existing correct root symlinks remain unchanged on later runs.
+New skills installed through any shared root then appear through the other roots without another migration.
+
+### Claude Code project instructions
+
+`install.sh` enables the built-in `cc-plugin-agents-md` mod through Claude's CLI.
+It sets `instructionFiles` to `claude-md-and-agents-md`, so project `AGENTS.md` files load alongside `CLAUDE.md` files.
+Claude skips an `AGENTS.md` that a `CLAUDE.md` already imports or links to.
+Projects that use only `AGENTS.md` require no `CLAUDE.md` wrapper.
+
+The installer uses these commands, verified with Claude Code 2.1.308:
+
+```bash
+claude plugin enable cc-plugin-agents-md@builtin --scope user
+claude plugin configure cc-plugin-agents-md@builtin --values-stdin <<'JSON'
+{"instructionFiles":"claude-md-and-agents-md"}
+JSON
+```
+
+Verified with a Sonnet CLI session in a temporary Git repository that contained `AGENTS.md` and no `CLAUDE.md`.
+With all tools disabled, Sonnet returned a random marker from the loaded project instructions.
+
+Keep the `~/.claude/CLAUDE.md` link for personal rules. Direct `AGENTS.md` support concerns project instructions.
+For existing sessions, reload plugins or start a new session after configuration.
+See [Claude's instruction-file documentation](https://code.claude.com/docs/en/memory#agentsmd) and the
+[built-in mods overview](https://code.claude.com/docs/en/plugins/mods/overview).
 
 Tool configuration is never manually-edited: Claude Code marketplaces/plugins go through the
 `claude plugin` CLI, and the Dart/Flutter MCP server through `claude mcp add` /
 `codex mcp add` — so a fresh machine gets the full setup in one run.
+
+### FreeCAD MCP
+
+`install.sh` registers the [freecad-mcp](https://github.com/neka-nat/freecad-mcp) server (`uvx freecad-mcp`) in Claude Code and Codex. It does this only when `/Applications/FreeCAD.app` and `uvx` exist. The FreeCAD side is manual, once per machine:
+
+1. Copy the addon into the FreeCAD 1.1 user `Mod` directory:
+   ```bash
+   git clone --depth 1 --branch v0.1.27 https://github.com/neka-nat/freecad-mcp.git /tmp/freecad-mcp
+   cp -R /tmp/freecad-mcp/addon/FreeCADMCP ~/Library/Application\ Support/FreeCAD/v1-1/Mod/
+   ```
+2. Restart FreeCAD.
+3. Select the **MCP Addon** workbench. Click **Start RPC Server**. The server listens on `127.0.0.1:9875`.
+4. Optional: in the **FreeCAD MCP** menu, check **Auto-Start Server**.
+
+Codex asks for approval before each FreeCAD write tool. In `codex exec`, `approval_policy=never` rejects these tools. Use `--approve-for-me` instead.
+
+The RPC server has no authentication. Keep **Remote Connections** off. The `execute_code` tool runs any Python in FreeCAD with your user permissions.
 
 The Pi web-access extension is configured for headless search: `install.sh` sets
 `"workflow": "none"` in `~/.pi/agent/web-search.json`, so `web_search` returns raw results and
@@ -101,7 +168,7 @@ install.sh         the idempotent bootstrap
 | `handoff` | Compact the current conversation into a handoff doc for the next session |
 | `hex` | Multi-round bounded, resumable agent loop runner using the `hex` CLI (linked from local `../hex`) |
 | `html-artifact` | One self-contained HTML page for a human: report, plan, diagram, deck, mockup, or prototype. Glance gate on every visual, quiz when the page teaches |
-| `improve-agents-md` | Create/audit/compress a project's AGENTS.md/CLAUDE.md against the canonical structure, decide which areas earn nested files (user-triggered) |
+| `improve-agents-md` | Create, audit, and maintain a project's AGENTS.md, and decide which areas require nested files (user-triggered) |
 | `improve-codebase-architecture` | Scan for module-deepening opportunities, before/after candidate report built with `html-artifact`, grill through picks |
 | `ponytail` | Lazy senior dev mode (upstream v5): smallest complete change, reuse before stdlib before deps; `review` (diff) and `audit` (repo) hunt over-engineering and test bloat |
 | `prototype` | Throwaway prototype answering a design question: logic (single shareable HTML demo) or UI (radical variants behind a URL param) |
@@ -123,7 +190,7 @@ agreements to check when editing any skill:
 | File (in the target project) | Owner / consumers |
 |---|---|
 | `docs/design/yyyy-MM-dd-<slug>.md` | Written by `design-doc` (skill or ralph preset); input to `implement`/`tdd` loops. **Decisions are locked** — implementers don't re-open them, changes go through the doc first. Also the home for standalone hard-to-reverse decisions (no separate ADR system). Monorepos: may live per sub-project (`<sub>/docs/design/`) |
-| `CLAUDE.md` / `AGENTS.md` | Agent instructions in the `improve-agents-md` skill's canonical structure (CLAUDE.md is a symlink), including the **Terminology** section (glossary, maintained by `domain-modeling` — vocabulary source for `design-doc`, `test-driven-dev`, `improve-codebase-architecture`). Global layer comes from `GLOBAL-AGENTS.md` symlinks; read at session start, kept updated. Monorepos: nested files stack additively (nearest wins) but only for areas that earn one — see the skill's two gates |
+| `AGENTS.md` | Project instructions follow the `improve-agents-md` structure and stay current as the project changes. The **Terminology** section holds the glossary. `domain-modeling` maintains that section for design and implementation skills. Global instructions come from `GLOBAL-AGENTS.md`. Nested project files add instructions only for areas that pass the skill's two gates. |
 | `README.md`, `TODO.md` / `PROGRESS.md` | Orientation docs — read before exploring code, updated in place as part of any change (new service → README, progress → TODO/PROGRESS) |
 | `docs/plan/<slug>/` (`map.md` + ticket files) | `wayfinder`'s local-markdown medium — used when the project doesn't run on GitHub issues/Projects. Tickets resolve via `grill-me`, `prototype`, `research` |
 | `docs/<slug>.html` | Written by `html-artifact`. Never committed unless the user asks. Content owners (`design-doc`, `improve-codebase-architecture`, `prototype`) name the archetype; the build contract, the glance gate, and the quiz live in `html-artifact` |
